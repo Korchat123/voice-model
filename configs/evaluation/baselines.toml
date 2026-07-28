@@ -1,0 +1,86 @@
+schema_version = 1
+protocol_version = "1.0.0"
+status = "unmeasured"
+protocol = "docs/reports/baselines/benchmark-protocol.md"
+
+[targets]
+first_audio_p95_ms = 500
+first_audio_hard_ceiling_ms = 1000
+rtf_p95_max = 0.8
+cancellation_p95_ms = 250
+peak_dbfs_max = -1.0
+soak_minutes = 30
+
+[workload]
+warmup_requests = 5
+repetitions = 3
+concurrency = 1
+languages = ["th", "en", "mixed"]
+scenarios = ["cold", "warm", "slow-consumer", "cancel", "soak"]
+
+[[candidates]]
+id = "moss-local-v1_5"
+name = "MOSS-TTS-Local-Transformer v1.5"
+priority = 1
+disposition = "benchmark"
+repository_url = "https://github.com/OpenMOSS/MOSS-TTS"
+model_url = "https://huggingface.co/OpenMOSS-Team/MOSS-TTS-Local-Transformer-v1.5"
+license_url = "https://github.com/OpenMOSS/MOSS-TTS/blob/main/LICENSE"
+repository_revision = "PIN_BEFORE_DOWNLOAD"
+model_revision = "PIN_BEFORE_DOWNLOAD"
+languages = ["th", "en", "mixed"]
+streaming = "official-backend"
+adaptation = "official-finetuning-tutorial"
+native_controls = ["voice_reference", "language_tag", "duration", "pause"]
+measurement_status = "not_tested"
+
+[[candidates]]
+id = "jaitts-f5tts"
+name = "JaiTTS-F5TTS"
+priority = 2
+disposition = "benchmark-comparator"
+repository_url = "https://github.com/JTS-AI-Team/JaiTTS"
+model_url = "https://huggingface.co/JTS-AI/JaiTTS-F5TTS"
+license_url = "https://huggingface.co/JTS-AI/JaiTTS-F5TTS"
+repository_revision = "PIN_BEFORE_DOWNLOAD"
+model_revision = "PIN_BEFORE_DOWNLOAD"
+languages = ["th", "mixed"]
+streaming = "not_documented"
+adaptation = "not_documented-for-checkpoint"
+native_controls = ["voice_reference", "duration", "speed"]
+measurement_status = "not_tested"
+
+[[candidates]]
+id = "typhoon2-audio-8b"
+name = "Typhoon2-Audio 8B"
+priority = 3
+disposition = "rejected"
+repository_url = "https://github.com/scb-10x/typhoon2-audio"
+model_url = "https://huggingface.co/scb10x/llama3.1-typhoon2-audio-8b-instruct"
+license_url = "https://github.com/scb-10x/typhoon2-audio/blob/main/LICENSE"
+repository_revision = "PIN_IF_RECONSIDERED"
+model_revision = "PIN_IF_RECONSIDERED"
+languages = ["th", "en", "mixed"]
+streaming = "todo-in-archived-repository"
+adaptation = "not_documented"
+native_controls = []
+measurement_status = "not_tested"
+rejection_reason = "Archived, GPU-required 8B audio-language model; streaming remains a TODO."
+
+[[candidates]]
+id = "xtts-v2"
+name = "XTTS-v2"
+priority = 4
+disposition = "rejected"
+repository_url = "https://github.com/coqui-ai/TTS"
+model_url = "https://huggingface.co/coqui/XTTS-v2"
+license_url = "https://coqui.ai/cpml"
+repository_revision = "PIN_IF_RECONSIDERED"
+model_revision = "PIN_IF_RECONSIDERED"
+languages = ["en"]
+streaming = "official"
+adaptation = "gpt-encoder-only"
+native_controls = ["voice_reference", "language", "speed"]
+measurement_status = "not_tested"
+rejection_reason = "Official supported-language list does not include Thai."
+
