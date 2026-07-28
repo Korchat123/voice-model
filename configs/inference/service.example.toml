@@ -1,0 +1,28 @@
+schema_version = 1
+
+[network]
+host = "127.0.0.1"
+port = 8080
+
+[audio]
+encoding = "pcm_s16le"
+sample_rate_hz = 24000
+channels = 1
+
+[limits]
+max_text_characters = 2000
+max_utf8_bytes = 8000
+max_predicted_audio_ms = 120000
+request_timeout_ms = 130000
+max_concurrent_requests = 1
+max_queued_requests = 2
+cancel_target_ms = 250
+stream_buffer_chunks = 4
+
+[privacy]
+log_synthesis_text = false
+log_audio = false
+
+[presets]
+path = "configs/inference/presets.json"
+

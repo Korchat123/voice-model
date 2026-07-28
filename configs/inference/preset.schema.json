@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/voice-model/preset.schema.json",
+  "title": "Voice preset collection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "collection_version", "presets"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "collection_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "presets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/preset"}
+    }
+  },
+  "$defs": {
+    "controlValue": {
+      "type": "number",
+      "minimum": -1.0,
+      "maximum": 1.0
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pitch": {"$ref": "#/$defs/controlValue"},
+        "pace": {"$ref": "#/$defs/controlValue"},
+        "energy": {"$ref": "#/$defs/controlValue"},
+        "warmth": {"$ref": "#/$defs/controlValue"},
+        "brightness": {"$ref": "#/$defs/controlValue"},
+        "breathiness": {"$ref": "#/$defs/controlValue"},
+        "resonance": {"$ref": "#/$defs/controlValue"},
+        "expressiveness": {"$ref": "#/$defs/controlValue"}
+      }
+    },
+    "preset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "description", "controls"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "description": {"type": "string", "minLength": 1, "maxLength": 160},
+        "controls": {"$ref": "#/$defs/controls"}
+      }
+    }
+  }
+}

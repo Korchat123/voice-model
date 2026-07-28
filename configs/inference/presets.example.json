@@ -1,0 +1,41 @@
+{
+  "$schema": "./preset.schema.json",
+  "schema_version": 1,
+  "collection_version": "1.0.0",
+  "presets": [
+    {
+      "id": "neutral",
+      "version": "1.0.0",
+      "description": "Calibrated neutral voice; all controls at baseline.",
+      "controls": {
+        "pitch": 0.0,
+        "pace": 0.0,
+        "energy": 0.0,
+        "warmth": 0.0,
+        "brightness": 0.0,
+        "breathiness": 0.0,
+        "resonance": 0.0,
+        "expressiveness": 0.0
+      }
+    },
+    {
+      "id": "warm",
+      "version": "1.0.0",
+      "description": "Slightly warmer and less bright while preserving identity.",
+      "controls": {
+        "warmth": 0.25,
+        "brightness": -0.1
+      }
+    },
+    {
+      "id": "thinking",
+      "version": "1.0.0",
+      "description": "Measured pace and restrained energy for reflective speech.",
+      "controls": {
+        "pace": -0.15,
+        "energy": -0.1,
+        "expressiveness": -0.1
+      }
+    }
+  ]
+}
