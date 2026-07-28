@@ -1,0 +1,54 @@
+name: Deferred phase gates
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Phase-specific checks to execute
+        required: true
+        type: choice
+        options:
+          - contracts
+          - data
+          - runtime
+          - controls-and-integration
+          - hardening
+          - release
+
+permissions:
+  contents: read
+
+jobs:
+  phase-check:
+    name: ${{ inputs.phase }} gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.13"
+          enable-cache: true
+          python-version: "3.11"
+      - run: uv sync --frozen
+      - name: Contracts
+        if: inputs.phase == 'contracts'
+        run: uv run pytest -q tests/unit/domain tests/unit/engines tests/contract
+      - name: Dataset
+        if: inputs.phase == 'data'
+        run: uv run pytest -q tests/unit/data
+      - name: Runtime and evaluation
+        if: inputs.phase == 'runtime'
+        run: uv run pytest -q tests/integration/service tests/unit/evaluation tests/audio_quality
+      - name: Controls and assistant integration
+        if: inputs.phase == 'controls-and-integration'
+        run: uv run pytest -q tests/unit/inference tests/integration/assistant
+      - name: Security and load
+        if: inputs.phase == 'hardening'
+        run: uv run pytest -q tests/security tests/load
+      - name: Release
+        if: inputs.phase == 'release'
+        run: uv run pytest -q tests/release
+
