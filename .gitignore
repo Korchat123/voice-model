@@ -1,0 +1,95 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+env/
+.uv/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+dist/
+build/
+*.egg-info/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and temporary files
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Local datasets and derived audio
+data/raw/**
+data/interim/**
+data/processed/**
+data/private/**
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+*.wav
+*.flac
+*.mp3
+*.ogg
+*.m4a
+*.opus
+*.pcm
+
+# Model and training artifacts
+models/**
+!models/README.md
+!models/.gitkeep
+runs/**
+!runs/README.md
+!runs/.gitkeep
+checkpoints/
+artifacts/
+exports/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.onnx
+*.bin
+
+# Evaluation output
+reports/generated/
+generated/
+outputs/
+
+# Node-based examples
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Containers and local overrides
+docker-compose.override.yml
+compose.override.yml
