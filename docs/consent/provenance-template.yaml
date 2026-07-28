@@ -1,0 +1,58 @@
+schema_version: "1.0"
+record_status: "user_input_required"
+consent:
+  consent_id: "USER_INPUT_REQUIRED"
+  signed: false
+  signed_record_location: "USER_INPUT_REQUIRED_RESTRICTED_LOCATION"
+  permitted_use_summary: "USER_INPUT_REQUIRED"
+  effective_date: null
+  expires_on: null
+  revocation_status: "not_checked"
+voice_owner:
+  # Do not put legal names, addresses, signatures, or contact details in a
+  # public repository. Use an access-controlled subject identifier.
+  subject_id: "USER_INPUT_REQUIRED"
+  authority_basis: "USER_INPUT_REQUIRED"
+source:
+  collection_id: "USER_INPUT_REQUIRED"
+  collection_method: "USER_INPUT_REQUIRED"
+  recorded_at: null
+  recording_location_category: "USER_INPUT_REQUIRED"
+  recorder_operator_id: "USER_INPUT_REQUIRED"
+  microphone_make_model: "USER_INPUT_REQUIRED"
+  audio_interface: "USER_INPUT_REQUIRED"
+  original_sample_rate_hz: null
+  original_bit_depth: null
+  channels: null
+  source_license_spdx_or_name: "USER_INPUT_REQUIRED"
+  source_license_reference: "USER_INPUT_REQUIRED"
+  third_party_material_present: null
+artifacts:
+  # Add one entry per immutable source object. Use SHA-256 lowercase hex.
+  - artifact_id: "USER_INPUT_REQUIRED"
+    restricted_uri: "USER_INPUT_REQUIRED"
+    sha256: "USER_INPUT_REQUIRED"
+    byte_size: null
+    media_type: "audio/wav"
+    captured_at: null
+processing_lineage:
+  # Every transformation must identify inputs, tool/config versions, and output.
+  - step_id: "USER_INPUT_REQUIRED"
+    operation: "USER_INPUT_REQUIRED"
+    input_artifact_ids: ["USER_INPUT_REQUIRED"]
+    tool_name: "USER_INPUT_REQUIRED"
+    tool_version: "USER_INPUT_REQUIRED"
+    config_sha256: "USER_INPUT_REQUIRED"
+    output_artifact_ids: ["USER_INPUT_REQUIRED"]
+dataset_membership:
+  dataset_id: "USER_INPUT_REQUIRED"
+  dataset_version: "USER_INPUT_REQUIRED"
+  manifest_sha256: "USER_INPUT_REQUIRED"
+  allowed_splits: ["USER_INPUT_REQUIRED"]
+review:
+  reviewer_id: "USER_INPUT_REQUIRED"
+  reviewed_at: null
+  consent_scope_matches: false
+  hashes_verified: false
+  third_party_rights_verified: false
+  notes: "USER_INPUT_REQUIRED"
