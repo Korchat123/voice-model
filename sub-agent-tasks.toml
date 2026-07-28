@@ -1,0 +1,552 @@
+schema_version = 1
+project = "controllable-local-ai-voice"
+canonical_plan = "voice-model-plan.md"
+coordination_guide = "sub-agent-work-plan.md"
+default_branch = "main"
+max_parallel_tasks = 3
+
+[policy]
+require_dependency_completion = true
+require_tests_for_code_changes = true
+require_handoff = true
+allow_training_before_consent = false
+allow_unapproved_voice_collection = false
+allow_large_artifacts_in_git = false
+allow_secrets_in_repository = false
+allow_remote_service_binding_by_default = false
+
+[[waves]]
+id = "wave-0"
+name = "Decisions"
+tasks = ["requirements-and-governance"]
+gate = "Consent, permitted use, target hardware, languages, and measurable targets are documented."
+
+[[waves]]
+id = "wave-1"
+name = "Foundation"
+tasks = [
+  "repository-foundation",
+  "voice-and-api-specification",
+  "baseline-research",
+]
+gate = "Development checks pass, the API is reviewed, and viable model licenses are documented."
+
+[[waves]]
+id = "wave-2"
+name = "Contracts and data"
+tasks = [
+  "domain-contracts-and-fake-engine",
+  "dataset-pipeline",
+  "engine-abstraction",
+]
+gate = "Fake streaming and dataset fixture acceptance tests pass."
+
+[[waves]]
+id = "wave-3"
+name = "Runtime and evaluation"
+tasks = [
+  "local-synthesis-service",
+  "training-and-export",
+  "evaluation-harness",
+]
+gate = "Service, cancellation, training smoke, and evaluation fixture tests pass."
+
+[[waves]]
+id = "wave-4"
+name = "Controls and integration"
+tasks = [
+  "voice-control-calibration",
+  "assistant-integration",
+]
+gate = "Voice controls and end-to-end assistant cancellation pass acceptance tests."
+
+[[waves]]
+id = "wave-5"
+name = "Hardening and release"
+tasks = [
+  "security-and-load-hardening",
+  "release-packaging",
+  "final-acceptance",
+]
+gate = "Security, load, privacy, licensing, rollback, and release checks pass."
+
+[[tasks]]
+id = "requirements-and-governance"
+title = "Confirm requirements, consent, and governance"
+role = "governance"
+wave = "wave-0"
+depends_on = []
+write_scope = [
+  "docs/consent/",
+  "docs/decisions/",
+  "docs/voice-specification.md",
+  "docs/model-card-template.md",
+]
+deliverables = [
+  "Consent and provenance templates",
+  "Voice specification with perceptual control definitions",
+  "Target hardware and latency decision record",
+  "Held-out evaluation sentence specification",
+]
+acceptance = [
+  "Voice owner and permitted use are explicitly documented",
+  "Languages and code-switching requirements are testable",
+  "Every public voice control has a neutral definition and safe range",
+]
+validation = ["manual governance review"]
+parallel_safe_with = []
+risk = "critical"
+
+[[tasks]]
+id = "repository-foundation"
+title = "Scaffold repository and development tooling"
+role = "foundation"
+wave = "wave-1"
+depends_on = ["requirements-and-governance"]
+write_scope = [
+  "README.md",
+  "LICENSE",
+  "SECURITY.md",
+  "CONTRIBUTING.md",
+  "pyproject.toml",
+  "uv.lock",
+  ".gitignore",
+  ".env.example",
+  "Makefile",
+  ".github/",
+  "src/voice_model/__init__.py",
+  "tests/",
+  "data/README.md",
+  "models/README.md",
+  "runs/README.md",
+]
+deliverables = [
+  "Python src-layout package",
+  "Locked development dependencies",
+  "Lint, format, type-check, and test configuration",
+  "CI workflow and safe artifact ignore rules",
+]
+acceptance = [
+  "A fresh environment installs from documented commands",
+  "Static checks and empty smoke test pass",
+  "Raw audio, model artifacts, runs, and secrets are ignored",
+]
+validation = [
+  "uv sync",
+  "uv run ruff check .",
+  "uv run pytest -q",
+]
+parallel_safe_with = ["voice-and-api-specification", "baseline-research"]
+risk = "medium"
+
+[[tasks]]
+id = "voice-and-api-specification"
+title = "Specify voice controls and public API"
+role = "governance"
+wave = "wave-1"
+depends_on = ["requirements-and-governance"]
+write_scope = [
+  "docs/api.md",
+  "docs/architecture.md",
+  "docs/decisions/0002-audio-api.md",
+  "configs/inference/",
+]
+deliverables = [
+  "Versioned request, metadata, error, and capability schemas",
+  "Streaming framing and cancellation semantics",
+  "Voice-control and preset configuration schema",
+]
+acceptance = [
+  "Unknown and out-of-range controls have defined errors",
+  "Limits, versions, encoding, and cancellation are specified",
+  "No endpoint accepts arbitrary filesystem paths",
+]
+validation = ["manual API review"]
+parallel_safe_with = ["repository-foundation", "baseline-research"]
+risk = "high"
+
+[[tasks]]
+id = "baseline-research"
+title = "Evaluate local TTS baseline candidates"
+role = "engine-research"
+wave = "wave-1"
+depends_on = ["requirements-and-governance"]
+write_scope = [
+  "docs/decisions/0001-tts-baseline.md",
+  "docs/reports/baselines/",
+  "configs/evaluation/baselines.toml",
+]
+deliverables = [
+  "Candidate feature and license matrix",
+  "Benchmark protocol for target hardware",
+  "Selection recommendation with rejected alternatives",
+]
+acceptance = [
+  "Code, model, adaptation, and output licenses are sourced",
+  "Thai, English, streaming, training, and control support are compared",
+  "Recommendation distinguishes measured results from assumptions",
+]
+validation = ["manual evidence and license review"]
+parallel_safe_with = ["repository-foundation", "voice-and-api-specification"]
+risk = "critical"
+
+[[tasks]]
+id = "domain-contracts-and-fake-engine"
+title = "Implement domain contracts and deterministic fake engine"
+role = "foundation"
+wave = "wave-2"
+depends_on = ["repository-foundation", "voice-and-api-specification"]
+write_scope = [
+  "src/voice_model/domain/",
+  "src/voice_model/engines/base.py",
+  "src/voice_model/engines/fake.py",
+  "tests/unit/domain/",
+  "tests/unit/engines/",
+  "tests/fixtures/audio/",
+]
+deliverables = [
+  "Typed domain request, controls, metadata, and error models",
+  "Engine protocol",
+  "Deterministic streaming fixture engine",
+]
+acceptance = [
+  "Control ranges and request limits are validated",
+  "Fake engine emits deterministic bounded chunks",
+  "Cancellation is represented in the engine protocol",
+]
+validation = [
+  "uv run ruff check src tests",
+  "uv run pytest -q tests/unit/domain tests/unit/engines",
+]
+parallel_safe_with = ["dataset-pipeline"]
+risk = "high"
+
+[[tasks]]
+id = "dataset-pipeline"
+title = "Implement auditable dataset pipeline"
+role = "data"
+wave = "wave-2"
+depends_on = ["repository-foundation", "requirements-and-governance"]
+write_scope = [
+  "src/voice_model/data/",
+  "scripts/prepare_dataset.py",
+  "configs/data/",
+  "tests/unit/data/",
+  "tests/fixtures/dataset/",
+  "assets/recording-scripts/",
+]
+deliverables = [
+  "Versioned manifest schema",
+  "Hash, metadata, audio-quality, duplicate, and leakage checks",
+  "Deterministic split logic and small licensed fixtures",
+]
+acceptance = [
+  "Every accepted clip requires consent, transcript, language, and hash metadata",
+  "Near-duplicate prompts cannot cross into the held-out set",
+  "Rejected clips remain auditable",
+]
+validation = [
+  "uv run pytest -q tests/unit/data",
+  "uv run python scripts/prepare_dataset.py --help",
+]
+parallel_safe_with = [
+  "domain-contracts-and-fake-engine",
+  "engine-abstraction",
+]
+risk = "critical"
+
+[[tasks]]
+id = "engine-abstraction"
+title = "Implement selected engine adapter boundary"
+role = "engine-research"
+wave = "wave-2"
+depends_on = [
+  "baseline-research",
+  "domain-contracts-and-fake-engine",
+]
+write_scope = [
+  "src/voice_model/engines/adapters/",
+  "configs/inference/engines/",
+  "tests/unit/engines/adapters/",
+  "tests/integration/engines/",
+]
+deliverables = [
+  "Selected engine adapter",
+  "Capability mapping for languages, timings, and controls",
+  "Model loading and cleanup tests",
+]
+acceptance = [
+  "Adapter implements only the shared engine protocol",
+  "Unsupported controls are reported rather than silently ignored",
+  "Model identity and version are returned with synthesis metadata",
+]
+validation = [
+  "uv run pytest -q tests/unit/engines",
+  "uv run pytest -q -m model tests/integration/engines",
+]
+parallel_safe_with = ["dataset-pipeline"]
+risk = "high"
+
+[[tasks]]
+id = "local-synthesis-service"
+title = "Implement bounded local streaming service"
+role = "service"
+wave = "wave-3"
+depends_on = ["domain-contracts-and-fake-engine"]
+write_scope = [
+  "src/voice_model/service/",
+  "src/voice_model/inference/streaming.py",
+  "scripts/run_service.py",
+  "tests/contract/",
+  "tests/integration/service/",
+]
+deliverables = [
+  "Health, capability, synthesis, and cancellation endpoints",
+  "Streaming framing, lifecycle, concurrency limits, and backpressure",
+  "Structured privacy-safe diagnostics",
+]
+acceptance = [
+  "Service binds to loopback by default",
+  "Cancellation is idempotent and releases resources",
+  "Text and output limits are enforced before resource exhaustion",
+]
+validation = [
+  "uv run pytest -q tests/contract tests/integration/service",
+]
+parallel_safe_with = ["training-and-export", "evaluation-harness"]
+risk = "critical"
+
+[[tasks]]
+id = "training-and-export"
+title = "Build reproducible training and export flow"
+role = "training"
+wave = "wave-3"
+depends_on = ["dataset-pipeline", "engine-abstraction"]
+write_scope = [
+  "src/voice_model/training/",
+  "scripts/train.py",
+  "scripts/export_model.py",
+  "configs/training/",
+  "tests/unit/training/",
+  "tests/integration/training/",
+]
+deliverables = [
+  "Locked training configuration and seed handling",
+  "Checkpoint metadata and selection logic",
+  "Small-fixture training smoke test",
+  "Versioned export metadata",
+]
+acceptance = [
+  "Every run records code, data, config, hardware, and seed",
+  "Training and export outputs stay in ignored artifact paths",
+  "Fixture smoke training is reproducible within documented tolerance",
+]
+validation = [
+  "uv run pytest -q tests/unit/training",
+  "uv run pytest -q -m training_smoke tests/integration/training",
+]
+parallel_safe_with = ["local-synthesis-service", "evaluation-harness"]
+risk = "critical"
+
+[[tasks]]
+id = "evaluation-harness"
+title = "Implement quality, control, and performance evaluation"
+role = "evaluation"
+wave = "wave-3"
+depends_on = [
+  "dataset-pipeline",
+  "domain-contracts-and-fake-engine",
+]
+write_scope = [
+  "src/voice_model/evaluation/",
+  "scripts/evaluate.py",
+  "configs/evaluation/",
+  "tests/unit/evaluation/",
+  "tests/audio_quality/",
+  "docs/reports/evaluation/",
+]
+deliverables = [
+  "Intelligibility, audio-quality, identity, latency, and control metrics",
+  "Blinded listening-test protocol",
+  "Machine-readable evaluation report",
+]
+acceptance = [
+  "Thai, English, and mixed-language results are reported separately",
+  "Control tests cover low, neutral, high, and combinations",
+  "Metrics do not treat speaker similarity as the only quality measure",
+]
+validation = [
+  "uv run pytest -q tests/unit/evaluation tests/audio_quality",
+]
+parallel_safe_with = ["local-synthesis-service", "training-and-export"]
+risk = "high"
+
+[[tasks]]
+id = "voice-control-calibration"
+title = "Calibrate natural and monotonic voice controls"
+role = "evaluation"
+wave = "wave-4"
+depends_on = [
+  "training-and-export",
+  "evaluation-harness",
+  "engine-abstraction",
+]
+write_scope = [
+  "src/voice_model/inference/controls.py",
+  "configs/inference/presets/",
+  "configs/evaluation/controls.toml",
+  "tests/unit/inference/",
+  "docs/reports/control-calibration/",
+]
+deliverables = [
+  "Versioned control-to-engine mappings",
+  "Named presets",
+  "Low, neutral, and high perceptual evaluation report",
+]
+acceptance = [
+  "Pitch, pace, energy, and supported timbre controls are monotonic",
+  "Pinched-to-open resonance does not cause unacceptable identity drift",
+  "Unsupported controls are absent from capabilities",
+]
+validation = [
+  "uv run pytest -q tests/unit/inference",
+  "manual blinded listening review",
+]
+parallel_safe_with = ["assistant-integration"]
+risk = "critical"
+
+[[tasks]]
+id = "assistant-integration"
+title = "Provide AI assistant voice-provider integration"
+role = "integration"
+wave = "wave-4"
+depends_on = [
+  "local-synthesis-service",
+  "voice-and-api-specification",
+]
+write_scope = [
+  "examples/assistant-client/",
+  "docs/integration.md",
+  "tests/integration/assistant/",
+]
+deliverables = [
+  "Reference local-model client/provider",
+  "Streaming playback and request cancellation example",
+  "Preset/control mapping and diagnostic guidance",
+]
+acceptance = [
+  "Only sanitized speech text is sent",
+  "Barge-in cancels synthesis and playback using one request ID",
+  "Voice-service failure does not block the text assistant",
+]
+validation = [
+  "uv run pytest -q tests/integration/assistant",
+]
+parallel_safe_with = ["voice-control-calibration"]
+risk = "high"
+
+[[tasks]]
+id = "security-and-load-hardening"
+title = "Harden privacy, limits, concurrency, and failure handling"
+role = "security-release"
+wave = "wave-5"
+depends_on = ["local-synthesis-service", "assistant-integration"]
+write_scope = [
+  "tests/security/",
+  "tests/load/",
+  "docs/threat-model.md",
+  "docs/reports/security/",
+]
+deliverables = [
+  "Threat model",
+  "Malformed-input, privacy, cancellation-race, and load tests",
+  "Resource-limit and failure-recovery report",
+]
+acceptance = [
+  "No full synthesis text or secrets appear in default logs",
+  "Concurrent requests cannot cause unbounded memory growth",
+  "Malformed input cannot access files or execute commands",
+]
+validation = [
+  "uv run pytest -q tests/security",
+  "uv run pytest -q -m load tests/load",
+]
+parallel_safe_with = ["release-packaging"]
+risk = "critical"
+
+[[tasks]]
+id = "release-packaging"
+title = "Create reproducible release package"
+role = "security-release"
+wave = "wave-5"
+depends_on = [
+  "voice-control-calibration",
+  "assistant-integration",
+  "training-and-export",
+]
+write_scope = [
+  "packaging/",
+  "scripts/build_release.py",
+  "docs/release/",
+  "docs/model-card.md",
+  "tests/release/",
+]
+deliverables = [
+  "Checksummed local runtime package",
+  "SBOM, licenses, model card, and compatibility manifest",
+  "Upgrade, rollback, deletion, and revocation procedures",
+]
+acceptance = [
+  "Release contains no raw recordings, secrets, or private metadata",
+  "Model, data, runtime, presets, and pronunciation versions are explicit",
+  "Rollback and clean-start procedures pass",
+]
+validation = [
+  "uv run pytest -q tests/release",
+  "uv run python scripts/build_release.py --verify-only",
+]
+parallel_safe_with = ["security-and-load-hardening"]
+risk = "critical"
+
+[[tasks]]
+id = "final-acceptance"
+title = "Run full project acceptance"
+role = "coordinator"
+wave = "wave-5"
+depends_on = [
+  "security-and-load-hardening",
+  "release-packaging",
+]
+write_scope = [
+  "docs/reports/final-acceptance/",
+]
+deliverables = [
+  "Final requirements traceability report",
+  "Quality, performance, security, license, and integration sign-off",
+  "Known limitations and deferred-work list",
+]
+acceptance = [
+  "All approved quality gates pass on target hardware",
+  "AI integration streams, controls, cancels, reconnects, and fails safely",
+  "Consent, model card, provenance, checksums, and release manifest are complete",
+]
+validation = [
+  "uv run ruff check .",
+  "uv run pytest -q",
+  "manual target-hardware and governance review",
+]
+parallel_safe_with = []
+risk = "critical"
+
+[handoff]
+required_fields = [
+  "task_id",
+  "status",
+  "files_changed",
+  "decisions",
+  "assumptions",
+  "commands_run",
+  "tests_not_run",
+  "known_risks",
+  "remaining_acceptance_criteria",
+]
