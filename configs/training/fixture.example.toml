@@ -1,0 +1,24 @@
+schema_version = 1
+
+[run]
+trainer = "deterministic-fixture-v1"
+seed = 1729
+max_steps = 3
+
+[dataset]
+manifest = "manifest.json"
+# Replace with the SHA-256 of the exact approved manifest.
+manifest_sha256 = "USER_INPUT_REQUIRED"
+
+[approvals]
+# These must remain false in an example. Create a private reviewed config for a
+# real run; the loader refuses to run until all three are explicitly true.
+consent = false
+license = false
+data = false
+
+[engine]
+id = "fixture-engine"
+version = "1.0.0"
+# SHA-256 identity of the pinned engine artifact/config.
+sha256 = "USER_INPUT_REQUIRED"
