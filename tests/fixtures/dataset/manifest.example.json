@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "generated-fixture",
+  "dataset_version": "1.0.0",
+  "clips": [
+    {
+      "clip_id": "synthetic-001",
+      "audio_path": "generated/synthetic-001.wav",
+      "audio_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "transcript": "This metadata fixture contains no recorded voice.",
+      "language": "en",
+      "speaker_id": "synthetic-test-signal",
+      "consent_id": "generated-non-voice-fixture",
+      "consent_status": "approved",
+      "source_license": "CC0-1.0",
+      "prompt_family_id": "fixture-policy",
+      "split": null,
+      "style": "neutral",
+      "processing_lineage": []
+    }
+  ]
+}

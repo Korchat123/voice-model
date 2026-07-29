@@ -1,0 +1,15 @@
+schema_version = 1
+sample_rate_hz = 24000
+channels = 1
+sample_width_bytes = 2
+min_duration_seconds = 0.25
+max_duration_seconds = 30.0
+max_clipped_fraction = 0.0
+min_rms = 20
+
+[splits]
+train_ratio = 0.8
+validation_ratio = 0.1
+held_out_ratio = 0.1
+# Replace before preparing a real dataset and record the chosen value.
+seed = "USER_INPUT_REQUIRED"

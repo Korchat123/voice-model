@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/voice-model/dataset-manifest-1.0.schema.json",
+  "title": "Voice Model Dataset Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "dataset_id", "dataset_version", "clips"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "dataset_id": { "type": "string", "minLength": 1 },
+    "dataset_version": { "type": "string", "minLength": 1 },
+    "clips": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/clip" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "clip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clip_id", "audio_path", "audio_sha256", "transcript", "language",
+        "speaker_id", "consent_id", "consent_status", "source_license",
+        "prompt_family_id", "split", "style", "processing_lineage"
+      ],
+      "properties": {
+        "clip_id": { "type": "string", "minLength": 1 },
+        "audio_path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "audio_sha256": { "$ref": "#/$defs/sha256" },
+        "transcript": { "type": "string", "minLength": 1 },
+        "language": { "enum": ["th", "en", "mixed"] },
+        "speaker_id": { "type": "string", "minLength": 1 },
+        "consent_id": { "type": "string", "minLength": 1 },
+        "consent_status": { "enum": ["approved", "revoked"] },
+        "source_license": { "type": "string", "minLength": 1 },
+        "prompt_family_id": { "type": "string", "minLength": 1 },
+        "split": { "enum": ["train", "validation", "held_out", null] },
+        "style": { "type": "string", "minLength": 1 },
+        "processing_lineage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "operation", "tool", "tool_version", "config_sha256", "input_sha256"
+            ],
+            "properties": {
+              "operation": { "type": "string", "minLength": 1 },
+              "tool": { "type": "string", "minLength": 1 },
+              "tool_version": { "type": "string", "minLength": 1 },
+              "config_sha256": { "$ref": "#/$defs/sha256" },
+              "input_sha256": { "$ref": "#/$defs/sha256" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
