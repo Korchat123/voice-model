@@ -1,0 +1,30 @@
+schema_version = 1
+release_id = "USER_INPUT_REQUIRED"
+runtime_version = "USER_INPUT_REQUIRED"
+python_requires = ">=3.11,<3.14"
+
+# Only explicit repository-relative files may enter a source/runtime release.
+include = [
+  "LICENSE",
+  "README.md",
+  "pyproject.toml",
+  "uv.lock",
+  "src/voice_model",
+  "configs/inference",
+  "docs/model-card.md",
+  "docs/release",
+]
+
+[model]
+id = "USER_INPUT_REQUIRED"
+version = "USER_INPUT_REQUIRED"
+sha256 = "USER_INPUT_REQUIRED"
+
+[approvals]
+# The example intentionally cannot build. A reviewed release config must set all
+# gates true and replace every placeholder.
+consent = false
+model = false
+license = false
+provenance = false
+security = false

@@ -15,6 +15,8 @@ concurrency:
 env:
   UV_FROZEN: "1"
   UV_NO_PROGRESS: "1"
+  RELEASE_CONFIG_PATH: ${{ vars.RELEASE_CONFIG_PATH }}
+  RELEASE_OUTPUT_PATH: ${{ vars.RELEASE_OUTPUT_PATH }}
 
 jobs:
   verify:
@@ -41,11 +43,30 @@ jobs:
           }
       - run: uv sync
       - run: uv run pytest -q tests/release
+      - name: Require protected release paths
+        shell: bash
+        run: |
+          test -n "${RELEASE_CONFIG_PATH:-}" || {
+            echo "::error::RELEASE_CONFIG_PATH is not configured"
+            exit 1
+          }
+          test -n "${RELEASE_OUTPUT_PATH:-}" || {
+            echo "::error::RELEASE_OUTPUT_PATH is not configured"
+            exit 1
+          }
+      - name: Build package in the restricted store
+        run: >-
+          uv run python scripts/build_release.py
+          --config "$RELEASE_CONFIG_PATH"
+          --output "$RELEASE_OUTPUT_PATH"
       - name: Verify package without publishing private artifacts
-        run: uv run python scripts/build_release.py --verify-only
+        run: >-
+          uv run python scripts/build_release.py
+          --config "$RELEASE_CONFIG_PATH"
+          --output "$RELEASE_OUTPUT_PATH"
+          --verify-only
       - name: Artifact hygiene reminder
         shell: bash
         run: |
           echo "No workflow artifact upload is permitted here."
           echo "Approved packages remain in the restricted digest-addressed store."
-
