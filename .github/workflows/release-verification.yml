@@ -58,6 +58,7 @@ jobs:
         run: >-
           uv run python scripts/build_release.py
           --config "$RELEASE_CONFIG_PATH"
+          --project-root .
           --output "$RELEASE_OUTPUT_PATH"
       - name: Verify package without publishing private artifacts
         run: >-

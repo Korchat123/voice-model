@@ -33,6 +33,12 @@ jobs:
     timeout-minutes: 120
     env:
       VOICE_APPROVED_MODEL_ID: ${{ vars.VOICE_APPROVED_MODEL_ID }}
+      VOICE_APPROVED_MODEL_VERSION: ${{ vars.VOICE_APPROVED_MODEL_VERSION }}
+      VOICE_APPROVED_ENGINE_ID: ${{ vars.VOICE_APPROVED_ENGINE_ID }}
+      VOICE_APPROVED_DATASET_REVISION: ${{ vars.VOICE_APPROVED_DATASET_REVISION }}
+      VOICE_EVALUATION_AUDIO_PATH: ${{ vars.VOICE_EVALUATION_AUDIO_PATH }}
+      VOICE_EVALUATION_OUTPUT_PATH: ${{ vars.VOICE_EVALUATION_OUTPUT_PATH }}
+      VOICE_EVALUATION_LANGUAGE: ${{ vars.VOICE_EVALUATION_LANGUAGE }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -44,9 +50,28 @@ jobs:
             echo "::error::Protected environment has no approved model reference"
             exit 1
           }
+          test -n "${VOICE_APPROVED_MODEL_VERSION:-}"
+          test -n "${VOICE_APPROVED_ENGINE_ID:-}"
+          test -n "${VOICE_APPROVED_DATASET_REVISION:-}"
+          test -n "${VOICE_EVALUATION_AUDIO_PATH:-}"
+          test -n "${VOICE_EVALUATION_OUTPUT_PATH:-}"
+          case "${VOICE_EVALUATION_LANGUAGE:-}" in
+            th|en|mixed) ;;
+            *) echo "::error::VOICE_EVALUATION_LANGUAGE must be th, en, or mixed"; exit 1 ;;
+          esac
       - run: uv sync
       - name: Real-engine and target-hardware evaluation
-        run: uv run python scripts/evaluate.py --require-approved-model
+        run: >-
+          uv run python scripts/evaluate.py
+          --audio "$VOICE_EVALUATION_AUDIO_PATH"
+          --output "$VOICE_EVALUATION_OUTPUT_PATH"
+          --run-id "protected-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          --project-revision "$GITHUB_SHA"
+          --dataset-revision "$VOICE_APPROVED_DATASET_REVISION"
+          --engine-id "$VOICE_APPROVED_ENGINE_ID"
+          --model-id "$VOICE_APPROVED_MODEL_ID"
+          --model-version "$VOICE_APPROVED_MODEL_VERSION"
+          --language "$VOICE_EVALUATION_LANGUAGE"
 
   training-smoke:
     name: Protected / approved-data training smoke
@@ -83,17 +108,26 @@ jobs:
     timeout-minutes: 120
     env:
       VOICE_APPROVED_MODEL_ID: ${{ vars.VOICE_APPROVED_MODEL_ID }}
+      VOICE_CONTROL_EVIDENCE_PATH: ${{ vars.VOICE_CONTROL_EVIDENCE_PATH }}
+      VOICE_CONTROL_EVIDENCE_SHA256: ${{ vars.VOICE_CONTROL_EVIDENCE_SHA256 }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
       - name: Fail closed without approved model reference
         shell: bash
-        run: test -n "${VOICE_APPROVED_MODEL_ID:-}"
+        run: |
+          test -n "${VOICE_APPROVED_MODEL_ID:-}"
+          test -n "${VOICE_CONTROL_EVIDENCE_PATH:-}"
+          test -n "${VOICE_CONTROL_EVIDENCE_SHA256:-}"
       - run: uv sync
       - run: uv run pytest -q tests/unit/inference tests/integration/assistant
-      - name: Generate only restricted-store evidence
-        run: uv run python scripts/evaluate.py --controls --no-public-audio
+      - name: Verify reviewed listening evidence from the restricted store
+        shell: bash
+        run: |
+          test -s "$VOICE_CONTROL_EVIDENCE_PATH"
+          echo "$VOICE_CONTROL_EVIDENCE_SHA256  $VOICE_CONTROL_EVIDENCE_PATH" \
+            | sha256sum --check --strict
 
   security-load:
     name: Protected / security and bounded load
