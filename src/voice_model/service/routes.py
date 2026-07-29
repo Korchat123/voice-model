@@ -146,7 +146,7 @@ class VoiceRoutes:
                 yield chunk.pcm_s16le
         except Exception:
             state = RequestState.FAILED
-            _LOG.exception(
+            _LOG.error(
                 "synthesis failed",
                 extra={"request_id": synthesis_request.request_id},
             )
