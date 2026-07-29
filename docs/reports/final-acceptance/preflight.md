@@ -1,7 +1,8 @@
 # Final acceptance preflight
 
 - Audit date: 2026-07-29
-- Audited revision: `390bdc4`
+- Audited revision: `7872bf7`
+- Workflow recheck: current working tree after protected-command corrections
 - Sources: `voice-model-plan.md` and `sub-agent-tasks.toml`
 - Outcome: **NOT READY FOR FINAL ACCEPTANCE**
 
@@ -21,19 +22,29 @@ environment:
 .\.venv\Scripts\ruff.exe check .
 .\.venv\Scripts\mypy.exe
 .\.venv\Scripts\pytest.exe -q
+.\.venv\Scripts\pytest.exe --cov -q
 .\.venv\Scripts\python.exe scripts\prepare_dataset.py --help
 .\.venv\Scripts\python.exe scripts\evaluate.py --help
 .\.venv\Scripts\python.exe scripts\train.py --help
 .\.venv\Scripts\python.exe scripts\export_model.py --help
+.\.venv\Scripts\pytest.exe -q tests\release
+.\.venv\Scripts\python.exe scripts\build_release.py --verify-only --output runs\release-preflight
 ```
 
 Observed results:
 
-- formatting: 92 files already formatted;
+- formatting: 100 files already formatted;
 - lint: passed;
-- strict typing: 57 source files passed;
-- tests: 113 passed;
+- strict typing: 58 source files passed;
+- tests: 118 passed;
+- coverage gate: 118 passed, 83.01% total coverage against the 80% minimum;
+- fast phase subsets: contracts/data 59 passed; service 17 passed;
+  training/evaluation 16 passed; controls/assistant 14 passed; security 12
+  passed;
+- release tests: 5 passed;
 - all four CLI help/smoke commands exited successfully.
+- release verification returned exit code 1, as expected, because no approved
+  release archive exists at `runs/release-preflight`.
 
 These results cover only checked-in code and synthetic/deterministic fixtures.
 No model was downloaded, no private dataset was inspected, no real voice was
@@ -52,7 +63,7 @@ Status meanings:
 | Task | Preflight status | Implemented evidence | Unmet acceptance gate |
 |---|---|---|---|
 | `requirements-and-governance` | **Blocked** | Consent, provenance, revocation, voice-specification, target-hardware, held-out-set, and model-card templates exist | Consent is unsigned; voice identity/use/accent/review fields remain `USER_INPUT_REQUIRED`; hardware and evaluation owners/threshold approvals are unset |
-| `repository-foundation` | **Infrastructure complete** | Python src layout, locked dependencies, ignore policy, docs, CI workflows, lint/type/test configuration | Fresh-checkout CI and repository branch/environment protection were not independently verified by this local preflight |
+| `repository-foundation` | **Infrastructure complete** | Python src layout, locked dependencies, ignore policy, docs, expanded fast/protected/release CI workflows, lint/type/test configuration | Fresh-checkout hosted CI results and repository branch/environment protection were not independently verified by this local preflight |
 | `voice-and-api-specification` | **Infrastructure complete; manual review pending** | Versioned API, streaming framing, cancellation, limits, errors, preset schemas, architecture ADR | Required human API/governance review is not recorded |
 | `baseline-research` | **Blocked** | Current official-source comparison, license questions, benchmark protocol, provisional MOSS-first recommendation | `configs/evaluation/baselines.toml` is `unmeasured`; immutable model revisions, exact artifact/license approval, target-hardware results, and accepted baseline are absent |
 | `domain-contracts-and-fake-engine` | **Infrastructure complete** | Typed domain contracts, deterministic bounded fake PCM engine, cancellation token, unit tests | This proves only the fake boundary, not a selected model |
@@ -64,7 +75,7 @@ Status meanings:
 | `voice-control-calibration` | **Blocked** | Versioned bounded interpolation, capability filters, safe-neutral logic, resonance ordering, tests, report template | Mapping config is unmeasured/unapproved; thresholds are unset; no blinded low/neutral/high or combination study; no identity-drift evidence; presets are not perceptually approved |
 | `assistant-integration` | **Infrastructure complete against fake service** | Reference provider, sanitized speech boundary, streaming/cancel/fallback behavior, integration tests | No approved real-engine end-to-end playback, reconnect, mute, lip-sync/timing, or target-assistant acceptance report exists |
 | `security-and-load-hardening` | **Partial** | Threat model, malformed-input/privacy/log-leakage tests, bounded fake-engine load tests, initial report | Report explicitly excludes penetration testing, RSS/VRAM measurement, real cancellation races, authentication/TLS/browser-origin/OS sandboxing, and multi-process deployment |
-| `release-packaging` | **Missing** | No release implementation found | `packaging/`, `scripts/build_release.py`, `docs/release/`, `docs/model-card.md`, and `tests/release/` are absent; no SBOM, license bundle, compatibility manifest, checksums, rollback, or verified package |
+| `release-packaging` | **Infrastructure complete; real release blocked** | Deterministic source/runtime archive builder, forbidden-artifact scan, manifest, SBOM, license inventory, compatibility metadata, checksums, model-card status, rollback/clean-start/deletion guidance, protected workflow, and five release tests | Example config deliberately contains unresolved approvals/model digest; no approved model, complete model card, restricted-store archive, signature/attestation, deployment, rollback execution, or release approval exists |
 | `final-acceptance` | **Blocked** | This preflight report only | Dependencies are incomplete; no signed quality/performance/security/license/integration/governance sign-off or exact release artifact exists |
 
 ## Wave gates
@@ -76,7 +87,7 @@ Status meanings:
 | Wave 2 — Contracts and data | **Partial** | Fake-engine and dataset-fixture tests pass; real dataset acceptance and selected adapter integration do not |
 | Wave 3 — Runtime and evaluation | **Partial** | Fake-service, fixture-training, and metric infrastructure pass; real model, dataset, hardware, and quality evidence do not |
 | Wave 4 — Controls and integration | **Partial** | Fake integration and mapping mechanics pass; controls/listening and real assistant end-to-end acceptance do not |
-| Wave 5 — Hardening and release | **Fail** | Hardening is fake-engine/initial only, release packaging is missing, and final acceptance prerequisites are incomplete |
+| Wave 5 — Hardening and release | **Fail / blocked** | Packaging and CI scaffolding now exist, but hardening is fake-engine/initial only and no approved, built, deployed, rollback-tested release artifact exists |
 
 ## Project-plan phase assessment
 
@@ -92,7 +103,9 @@ Status meanings:
   results exist.
 - Phase 6 has a fake-engine local service only.
 - Phase 7 has a fake-service reference assistant integration only.
-- Phase 8 release and maintenance packaging is not implemented.
+- Phase 8 has packaging and operational-document infrastructure, but no approved
+  model release, restricted-store artifact, deployment, rollback execution, or
+  maintenance evidence.
 
 The first milestone in `voice-model-plan.md` is therefore incomplete. In
 particular, requirements/hardware, signed consent, accepted baseline benchmark,
@@ -100,8 +113,10 @@ and approved voice specification remain outstanding.
 
 ## Defects and discrepancies
 
-1. **Release task absent:** all declared release-packaging paths and artifacts
-   are missing. This is the largest implementation gap before final acceptance.
+1. **No real release artifact:** packaging mechanics and tests exist, but the
+   example config deliberately fails closed on consent/model/license/provenance/
+   security approvals. `--verify-only` correctly returns failure when pointed
+   at a nonexistent preflight archive.
 2. **Selected adapter deliverable absent:** the registry is intentionally
    generic and approval-gated. This is correct safety behavior, but it does not
    satisfy the task's selected real-engine adapter/loading/cleanup deliverable.
@@ -112,17 +127,34 @@ and approved voice specification remain outstanding.
 5. **Hardening scope is narrower than acceptance:** the initial report uses the
    deterministic fake engine and does not demonstrate real memory/VRAM bounds,
    real cancellation behavior, or deployment security.
-6. **CI/CD contract is not fully enforceable:** `docs/ci-cd.md` says branch
+6. **CI/CD administration is not locally verifiable:** workflow files now cover
+   fast, protected-model/hardware, and protected-release classes, but branch
    protection, environments, runners, and approvals still require repository
    administrator configuration. Local tests cannot verify those controls.
-7. **Text encoding corruption remains in planning/governance documents:** visible
-   mojibake such as `โ€”`, `โค`, and related sequences appears in
-   `voice-model-plan.md` and governance/ADR text. This can confuse normative
-   wording and should be corrected in a dedicated documentation change.
-8. **Commit wording overstates calibration:** commit `8f23d4d` is titled
+7. **Commit wording overstates calibration:** commit `8f23d4d` is titled
    “Add measured voice controls…” while checked-in calibration evidence is
    explicitly unmeasured/unapproved. The code is fail-closed, but the history
    label should not be treated as evidence.
+
+### Resolved workflow findings
+
+The earlier protected-workflow command mismatch is resolved in the current
+working tree:
+
+- model evaluation supplies every argument required by `scripts/evaluate.py`
+  from protected variables and validates the language enum;
+- control/listening validation no longer calls nonexistent CLI flags and
+  verifies a non-empty restricted evidence file against its immutable SHA-256;
+- release construction now passes `--project-root .`; verification points to
+  the same configured output archive.
+
+This confirms command/configuration alignment only. The protected jobs were not
+executed because approved runners, artifacts, evidence, and environment
+approvals are not available in this preflight.
+
+The earlier preflight's encoding-corruption finding was false. UTF-8-aware
+inspection shows correct Unicode em dashes, smart quotes, arrows, box-drawing
+characters, and ≤ symbols; the mojibake came from PowerShell display decoding.
 
 ## Exact remaining validation commands
 
@@ -155,9 +187,13 @@ uv run pytest -q -m load tests/load
 # After an approved model adapter is implemented and artifacts are provisioned.
 uv run pytest -q -m model tests/integration/engines
 
-# After release packaging is implemented.
+# Current release infrastructure. Verification must point to an existing archive.
 uv run pytest -q tests/release
-uv run python scripts/build_release.py --verify-only
+uv run python scripts/build_release.py --verify-only --output <existing-release.zip>
+
+# After all approvals are resolved, build once and verify the same archive.
+uv run python scripts/build_release.py --config <approved-release.toml> --project-root . --output <release.zip>
+uv run python scripts/build_release.py --verify-only --output <release.zip>
 ```
 
 In addition, protected/manual jobs must run the baseline protocol, real dataset
