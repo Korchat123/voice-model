@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4efe6">
+    <title>Voice Workshop — Local voice setup</title>
+    <link rel="stylesheet" href="/setup/app.css">
+    <script src="/setup/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/setup" aria-label="Voice Workshop home">
+        <span class="brand-mark" aria-hidden="true">V</span>
+        <span>Voice Workshop</span>
+      </a>
+      <div class="privacy-badge">
+        <span class="privacy-dot" aria-hidden="true"></span>
+        Local session
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Create responsibly. Listen carefully.</p>
+          <h1>Shape a voice your assistant can call its own.</h1>
+          <p class="hero-copy">
+            Choose a lawful starting point, prepare clean reference audio, and
+            tune a voice without sending recordings outside this local service.
+          </p>
+        </div>
+        <aside class="session-card" aria-label="Session privacy information">
+          <span class="session-icon" aria-hidden="true">◎</span>
+          <div>
+            <strong>Your audio stays with you</strong>
+            <p>Recordings remain in this browser unless you deliberately export them.</p>
+          </div>
+        </aside>
+      </section>
+
+      <nav class="steps" aria-label="Setup progress">
+        <button class="step is-active" data-step-target="1" type="button">
+          <span>01</span> Foundation
+        </button>
+        <button class="step" data-step-target="2" type="button">
+          <span>02</span> Reference
+        </button>
+        <button class="step" data-step-target="3" type="button">
+          <span>03</span> Character
+        </button>
+        <button class="step" data-step-target="4" type="button">
+          <span>04</span> Review
+        </button>
+      </nav>
+
+      <form id="voice-form" novalidate>
+        <section class="panel step-panel is-active" data-step="1">
+          <div class="panel-heading">
+            <p class="section-number">Step 01</p>
+            <h2>Choose the voice foundation</h2>
+            <p>Select one lawful source. You can change this before export.</p>
+          </div>
+
+          <div class="choice-grid" role="radiogroup" aria-label="Base voice source">
+            <label class="choice-card">
+              <input type="radio" name="source" value="licensed-synthetic" checked>
+              <span class="choice-check" aria-hidden="true">✓</span>
+              <span class="choice-icon" aria-hidden="true">◇</span>
+              <strong>Licensed synthetic voice</strong>
+              <small>Start from an approved open model without imitating a person.</small>
+              <span class="tag">Recommended first</span>
+            </label>
+            <label class="choice-card">
+              <input type="radio" name="source" value="designed-synthetic">
+              <span class="choice-check" aria-hidden="true">✓</span>
+              <span class="choice-icon" aria-hidden="true">✦</span>
+              <strong>Designed synthetic voice</strong>
+              <small>Create an original character from a text description.</small>
+              <span class="tag">No voice owner</span>
+            </label>
+            <label class="choice-card">
+              <input type="radio" name="source" value="consented-recording">
+              <span class="choice-check" aria-hidden="true">✓</span>
+              <span class="choice-icon" aria-hidden="true">◉</span>
+              <strong>My consented recording</strong>
+              <small>Use your own voice or one supplied by an authorized owner.</small>
+              <span class="tag">Consent required</span>
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              <span>Voice name</span>
+              <input id="voice-name" name="voice_name" maxlength="48"
+                placeholder="e.g. Juniper Local" required>
+            </label>
+            <label>
+              <span>Primary language</span>
+              <select id="language" name="language">
+                <option value="th">Thai</option>
+                <option value="en">English</option>
+                <option value="mixed" selected>Thai + English</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="consent-row">
+            <input id="consent" type="checkbox" required>
+            <span>
+              <strong>I have the right to use this voice source.</strong>
+              I will not imitate a real person without their explicit permission.
+            </span>
+          </label>
+        </section>
+
+        <section class="panel step-panel" data-step="2">
+          <div class="panel-heading">
+            <p class="section-number">Step 02</p>
+            <h2>Add a clean voice reference</h2>
+            <p>Optional for synthetic voices; required when adapting a real voice.</p>
+          </div>
+
+          <div class="guidance-grid">
+            <article class="guide-card">
+              <span>01</span>
+              <strong>Find a quiet room</strong>
+              <p>Turn off fans, music, notifications, and noisy appliances.</p>
+            </article>
+            <article class="guide-card">
+              <span>02</span>
+              <strong>Keep one position</strong>
+              <p>Stay 15–20 cm from the microphone and avoid touching it.</p>
+            </article>
+            <article class="guide-card">
+              <span>03</span>
+              <strong>Speak naturally</strong>
+              <p>Use a comfortable pace and energy. Do not force a character.</p>
+            </article>
+            <article class="guide-card">
+              <span>04</span>
+              <strong>Check every take</strong>
+              <p>Reject clipping, echoes, interruptions, and incorrect words.</p>
+            </article>
+          </div>
+
+          <div class="recorder">
+            <div class="recorder-copy">
+              <p class="eyebrow">Reference clip</p>
+              <h3>Record 15–30 seconds</h3>
+              <p id="recording-prompt">
+                “วันนี้อากาศสบาย และ I am testing a clear, natural assistant voice.”
+              </p>
+            </div>
+            <div class="meter" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <div class="recorder-actions">
+              <button id="record-button" class="button button-dark" type="button">
+                <span aria-hidden="true">●</span> Start recording
+              </button>
+              <label class="button button-light upload-button">
+                Upload WAV/WebM
+                <input id="audio-upload" type="file" accept="audio/wav,audio/webm,audio/ogg">
+              </label>
+            </div>
+            <p id="audio-status" class="status" role="status">No reference selected.</p>
+            <audio id="audio-preview" controls hidden></audio>
+          </div>
+        </section>
+
+        <section class="panel step-panel" data-step="3">
+          <div class="panel-heading">
+            <p class="section-number">Step 03</p>
+            <h2>Define the voice character</h2>
+            <p>Start near neutral. Extreme combinations can reduce intelligibility.</p>
+          </div>
+
+          <div class="preset-row" aria-label="Style presets">
+            <button class="preset is-active" type="button" data-preset="neutral">Neutral</button>
+            <button class="preset" type="button" data-preset="warm">Warm</button>
+            <button class="preset" type="button" data-preset="cheerful">Cheerful</button>
+            <button class="preset" type="button" data-preset="serious">Serious</button>
+            <button class="preset" type="button" data-preset="thinking">Thinking</button>
+          </div>
+
+          <div id="controls" class="controls-grid">
+            <label class="control">
+              <span><b>Pitch</b><output for="pitch">0.00</output></span>
+              <input id="pitch" type="range" min="-1" max="1" value="0" step="0.05">
+              <small>Lower <i>Neutral</i> Higher</small>
+            </label>
+            <label class="control">
+              <span><b>Pace</b><output for="pace">0.00</output></span>
+              <input id="pace" type="range" min="-1" max="1" value="0" step="0.05">
+              <small>Slower <i>Neutral</i> Faster</small>
+            </label>
+            <label class="control">
+              <span><b>Energy</b><output for="energy">0.00</output></span>
+              <input id="energy" type="range" min="-1" max="1" value="0" step="0.05">
+              <small>Gentle <i>Neutral</i> Strong</small>
+            </label>
+            <label class="control">
+              <span><b>Warmth</b><output for="warmth">0.00</output></span>
+              <input id="warmth" type="range" min="-1" max="1" value="0" step="0.05">
+              <small>Cool <i>Neutral</i> Warm</small>
+            </label>
+            <label class="control">
+              <span><b>Resonance</b><output for="resonance">0.00</output></span>
+              <input id="resonance" type="range" min="-1" max="1" value="0" step="0.05">
+              <small>Pinched <i>Neutral</i> Open</small>
+            </label>
+            <label class="control">
+              <span><b>Expressiveness</b><output for="expressiveness">0.00</output></span>
+              <input id="expressiveness" type="range" min="-1" max="1" value="0" step="0.05">
+              <small>Restrained <i>Neutral</i> Animated</small>
+            </label>
+          </div>
+
+          <div class="preview-box">
+            <label>
+              <span>Preview sentence</span>
+              <textarea id="preview-text" maxlength="500">สวัสดีค่ะ ฉันพร้อมช่วยคุณแล้ว — Hello, I’m ready when you are.</textarea>
+            </label>
+            <button id="preview-button" class="button button-accent" type="button">
+              <span aria-hidden="true">▶</span> Preview local voice
+            </button>
+            <button id="stop-button" class="button button-light" type="button" disabled>
+              Stop
+            </button>
+            <p id="preview-status" class="status" role="status"></p>
+          </div>
+        </section>
+
+        <section class="panel step-panel" data-step="4">
+          <div class="panel-heading">
+            <p class="section-number">Step 04</p>
+            <h2>Review before export</h2>
+            <p>This creates configuration and provenance metadata—not a trained model.</p>
+          </div>
+          <div id="review" class="review-grid"></div>
+          <div class="review-warning">
+            <strong>Before training</strong>
+            <p>
+              Complete the consent record, approve the base-model license, verify
+              every recording, and keep raw voice files outside Git.
+            </p>
+          </div>
+          <button id="export-button" class="button button-accent button-large" type="button">
+            Export local setup manifest
+          </button>
+          <p id="export-status" class="status" role="status"></p>
+        </section>
+
+        <footer class="form-footer">
+          <button id="back-button" class="button button-light" type="button" disabled>Back</button>
+          <p><span id="current-step">1</span> of 4</p>
+          <button id="next-button" class="button button-dark" type="button">Continue</button>
+        </footer>
+      </form>
+    </main>
+
+    <footer class="page-footer">
+      <p>Voice Workshop · Local-first and consent-first</p>
+      <a href="/v1/health">Service status</a>
+    </footer>
+  </body>
+</html>

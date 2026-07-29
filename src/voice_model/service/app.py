@@ -9,6 +9,7 @@ from voice_model.engines.fake import FakeEngine
 from voice_model.service.lifecycle import RequestLifecycle
 from voice_model.service.routes import VoiceRoutes
 from voice_model.service.settings import ServiceSettings
+from voice_model.service.setup_ui import root_redirect, setup_page, setup_script, setup_styles
 
 
 def create_app(
@@ -25,6 +26,10 @@ def create_app(
     app = Starlette(
         debug=False,
         routes=[
+            Route("/", root_redirect, methods=["GET"]),
+            Route("/setup", setup_page, methods=["GET"]),
+            Route("/setup/app.css", setup_styles, methods=["GET"]),
+            Route("/setup/app.js", setup_script, methods=["GET"]),
             Route("/v1/health", handlers.health, methods=["GET"]),
             Route("/v1/capabilities", handlers.capabilities, methods=["GET"]),
             Route("/v1/synthesis", handlers.synthesis, methods=["POST"]),
