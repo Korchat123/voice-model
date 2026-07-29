@@ -1,0 +1,41 @@
+schema_version = 1
+calibration_version = "0.1.0-unapproved"
+engine_id = "approval-gated-placeholder"
+engine_revision = "UNSET_APPROVED_ENGINE_REVISION"
+
+# These anchors demonstrate structure only. No mapping is perceptually approved.
+[[mappings]]
+control = "pitch"
+engine_parameter = "pitch_scale"
+public_points = [-1.0, 0.0, 1.0]
+engine_points = [0.9, 1.0, 1.1]
+engine_minimum = 0.8
+engine_maximum = 1.2
+measured = false
+approved = false
+evidence_revision = "UNSET_CALIBRATION_REPORT"
+neutral_fallback_safe = true
+
+[[mappings]]
+control = "pace"
+engine_parameter = "duration_scale"
+public_points = [-1.0, 0.0, 1.0]
+engine_points = [1.15, 1.0, 0.85]
+engine_minimum = 0.75
+engine_maximum = 1.25
+measured = false
+approved = false
+evidence_revision = "UNSET_CALIBRATION_REPORT"
+neutral_fallback_safe = true
+
+[[mappings]]
+control = "resonance"
+engine_parameter = "resonance_conditioning"
+public_points = [-1.0, 0.0, 1.0]
+engine_points = [-0.25, 0.0, 0.25]
+engine_minimum = -0.3
+engine_maximum = 0.3
+measured = false
+approved = false
+evidence_revision = "UNSET_BLINDED_PINCHED_NEUTRAL_OPEN_REPORT"
+neutral_fallback_safe = true

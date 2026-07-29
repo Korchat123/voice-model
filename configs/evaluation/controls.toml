@@ -1,0 +1,21 @@
+schema_version = 1
+protocol_version = "1.0.0"
+status = "unmeasured"
+levels = [-1.0, 0.0, 1.0]
+minimum_samples_per_level = 3
+languages = ["th", "en", "mixed"]
+
+[gates]
+require_monotonic_objective_proxy = true
+require_blinded_ordering_above_chance = true
+require_intelligibility_non_regression = true
+require_identity_non_regression = true
+require_no_clipping = true
+
+[resonance]
+negative_label = "pinched-nasal"
+neutral_label = "calibrated-neutral"
+positive_label = "open-full"
+direction = "increasing"
+identity_drift_threshold = "UNSET_APPROVED_THRESHOLD"
+intelligibility_threshold = "UNSET_APPROVED_THRESHOLD"
