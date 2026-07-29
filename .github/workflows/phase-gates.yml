@@ -1,54 +1,110 @@
-name: Deferred phase gates
+name: Protected model and hardware gates
 
 on:
   workflow_dispatch:
     inputs:
-      phase:
-        description: Phase-specific checks to execute
+      gate:
+        description: Approved protected gate to execute
         required: true
         type: choice
         options:
-          - contracts
-          - data
-          - runtime
-          - controls-and-integration
-          - hardening
-          - release
+          - model-evaluation
+          - training-smoke
+          - controls-listening
+          - security-load
 
 permissions:
   contents: read
 
+concurrency:
+  group: protected-${{ inputs.gate }}
+  cancel-in-progress: false
+
+env:
+  UV_FROZEN: "1"
+  UV_NO_PROGRESS: "1"
+
 jobs:
-  phase-check:
-    name: ${{ inputs.phase }} gate
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  model-evaluation:
+    name: Protected / target-hardware model evaluation
+    if: inputs.gate == 'model-evaluation'
+    environment: model-validation
+    runs-on: [self-hosted, voice-model, approved]
+    timeout-minutes: 120
+    env:
+      VOICE_APPROVED_MODEL_ID: ${{ vars.VOICE_APPROVED_MODEL_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.7.13"
-          enable-cache: true
-          python-version: "3.11"
-      - run: uv sync --frozen
-      - name: Contracts
-        if: inputs.phase == 'contracts'
-        run: uv run pytest -q tests/unit/domain tests/unit/engines tests/contract
-      - name: Dataset
-        if: inputs.phase == 'data'
-        run: uv run pytest -q tests/unit/data
-      - name: Runtime and evaluation
-        if: inputs.phase == 'runtime'
-        run: uv run pytest -q tests/integration/service tests/unit/evaluation tests/audio_quality
-      - name: Controls and assistant integration
-        if: inputs.phase == 'controls-and-integration'
-        run: uv run pytest -q tests/unit/inference tests/integration/assistant
-      - name: Security and load
-        if: inputs.phase == 'hardening'
-        run: uv run pytest -q tests/security tests/load
-      - name: Release
-        if: inputs.phase == 'release'
-        run: uv run pytest -q tests/release
+      - name: Fail closed without approved model reference
+        shell: bash
+        run: |
+          test -n "${VOICE_APPROVED_MODEL_ID:-}" || {
+            echo "::error::Protected environment has no approved model reference"
+            exit 1
+          }
+      - run: uv sync
+      - name: Real-engine and target-hardware evaluation
+        run: uv run python scripts/evaluate.py --require-approved-model
 
+  training-smoke:
+    name: Protected / approved-data training smoke
+    if: inputs.gate == 'training-smoke'
+    environment: model-training
+    runs-on: [self-hosted, voice-model, approved]
+    timeout-minutes: 180
+    env:
+      VOICE_APPROVED_DATASET_SHA256: ${{ vars.VOICE_APPROVED_DATASET_SHA256 }}
+      VOICE_APPROVED_MODEL_ID: ${{ vars.VOICE_APPROVED_MODEL_ID }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Fail closed without immutable approvals
+        shell: bash
+        run: |
+          test -n "${VOICE_APPROVED_DATASET_SHA256:-}" || {
+            echo "::error::Approved dataset digest is missing"
+            exit 1
+          }
+          test -n "${VOICE_APPROVED_MODEL_ID:-}" || {
+            echo "::error::Approved base model is missing"
+            exit 1
+          }
+      - run: uv sync
+      - run: uv run pytest -q -m training_smoke tests/integration/training
+
+  controls-listening:
+    name: Protected / control and listening evaluation
+    if: inputs.gate == 'controls-listening'
+    environment: model-validation
+    runs-on: [self-hosted, voice-model, approved]
+    timeout-minutes: 120
+    env:
+      VOICE_APPROVED_MODEL_ID: ${{ vars.VOICE_APPROVED_MODEL_ID }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Fail closed without approved model reference
+        shell: bash
+        run: test -n "${VOICE_APPROVED_MODEL_ID:-}"
+      - run: uv sync
+      - run: uv run pytest -q tests/unit/inference tests/integration/assistant
+      - name: Generate only restricted-store evidence
+        run: uv run python scripts/evaluate.py --controls --no-public-audio
+
+  security-load:
+    name: Protected / security and bounded load
+    if: inputs.gate == 'security-load'
+    environment: load-validation
+    runs-on: [self-hosted, voice-model, approved]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: uv sync
+      - run: uv run pytest -q tests/security
+      - run: uv run pytest -q -m load tests/load

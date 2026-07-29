@@ -1,50 +1,159 @@
-name: CI
+name: Fast phase checks
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: fast-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  UV_FROZEN: "1"
+  UV_NO_PROGRESS: "1"
+
 jobs:
-  quality:
-    name: Quality / Python ${{ matrix.python-version }}
+  foundation:
+    name: Foundation / quality
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.7.13"
           enable-cache: true
-          python-version: ${{ matrix.python-version }}
-      - run: uv sync --frozen
-      - run: uv run ruff format --check .
-      - run: uv run ruff check .
-      - run: uv run mypy
-      - run: uv run pytest --cov
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+      - run: uv sync
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Lint
+        run: uv run ruff check .
+      - name: Type check
+        run: uv run mypy
+      - name: Unit and coverage gate
+        run: uv run pytest --cov
 
-  secret-scan:
-    name: Secret scan
+  python-compatibility:
+    name: Foundation / Python 3.13 compatibility
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.13"
+      - run: uv sync
+      - run: uv run pytest -q
+
+  contracts-data:
+    name: Contracts and data / fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+      - run: uv sync
+      - run: >-
+          uv run pytest -q
+          tests/unit/domain
+          tests/unit/engines
+          tests/unit/data
+          tests/contract
+
+  service:
+    name: Service / fake-engine integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+      - run: uv sync
+      - run: uv run pytest -q tests/integration/service tests/contract
+
+  training-evaluation-fixtures:
+    name: Training and evaluation / synthetic fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+      - run: uv sync
+      - name: Synthetic fixture checks only
+        run: >-
+          uv run pytest -q
+          tests/unit/training
+          tests/integration/training
+          tests/unit/evaluation
+          tests/audio_quality
+
+  controls-integration:
+    name: Controls and assistant / fake integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+      - run: uv sync
+      - run: uv run pytest -q tests/unit/inference tests/integration/assistant
+
+  security:
+    name: Security / privacy and secret checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Scan tracked content for high-confidence secret patterns
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+      - run: uv sync
+      - name: High-confidence tracked-secret scan
         shell: bash
         run: |
           if git grep -nIE \
@@ -53,36 +162,5 @@ jobs:
             echo "::error::Potential secret found in tracked content"
             exit 1
           fi
-
-  local-service:
-    name: Phase 3 / local service
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.7.13"
-          enable-cache: true
-          python-version: "3.11"
-      - run: uv sync --frozen
-      - name: Contract and service integration tests
-        run: uv run pytest -q tests/contract tests/integration/service
-
-  assistant-integration:
-    name: Phase 4 / assistant integration
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.7.13"
-          enable-cache: true
-          python-version: "3.11"
-      - run: uv sync --frozen
-      - run: uv run pytest -q tests/integration/assistant
+      - name: Privacy and malformed-input tests
+        run: uv run pytest -q tests/security

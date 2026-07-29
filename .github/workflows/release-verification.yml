@@ -1,0 +1,51 @@
+name: Protected release verification
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  UV_FROZEN: "1"
+  UV_NO_PROGRESS: "1"
+
+jobs:
+  verify:
+    name: Release / protected verification
+    environment: release-candidate
+    runs-on: [self-hosted, voice-model, approved]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require an immutable release commit
+        shell: bash
+        run: |
+          test -n "${GITHUB_SHA:-}"
+          test -f scripts/build_release.py || {
+            echo "::error::Release builder is not implemented"
+            exit 1
+          }
+          test -d tests/release || {
+            echo "::error::Release verification suite is not implemented"
+            exit 1
+          }
+      - run: uv sync
+      - run: uv run pytest -q tests/release
+      - name: Verify package without publishing private artifacts
+        run: uv run python scripts/build_release.py --verify-only
+      - name: Artifact hygiene reminder
+        shell: bash
+        run: |
+          echo "No workflow artifact upload is permitted here."
+          echo "Approved packages remain in the restricted digest-addressed store."
+
