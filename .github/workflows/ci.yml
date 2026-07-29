@@ -53,3 +53,20 @@ jobs:
             echo "::error::Potential secret found in tracked content"
             exit 1
           fi
+
+  local-service:
+    name: Phase 3 / local service
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.13"
+          enable-cache: true
+          python-version: "3.11"
+      - run: uv sync --frozen
+      - name: Contract and service integration tests
+        run: uv run pytest -q tests/contract tests/integration/service
