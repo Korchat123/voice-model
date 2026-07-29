@@ -1,0 +1,32 @@
+schema_version = 1
+config_version = "1.0.0"
+
+[audio]
+sample_rate_hz = 24000
+channels = 1
+sample_width_bytes = 2
+silence_dbfs = -50.0
+peak_dbfs_max = -1.0
+clipped_samples_max = 0
+
+[latency]
+first_audio_p95_ms_max = 500.0
+first_audio_hard_ceiling_ms = 1000.0
+rtf_p95_max = 0.8
+cancellation_p95_ms_max = 250.0
+
+[controls]
+levels = [-1.0, 0.0, 1.0]
+minimum_samples_per_level = 3
+require_blinded_review = true
+
+[external_metrics.asr]
+required_for_release = true
+adapter = "UNSET_APPROVED_ADAPTER"
+model_revision = "UNSET_IMMUTABLE_REVISION"
+
+[external_metrics.speaker]
+required_for_release = true
+adapter = "UNSET_APPROVED_ADAPTER"
+model_revision = "UNSET_IMMUTABLE_REVISION"
+sole_quality_gate = false
