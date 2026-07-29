@@ -1,0 +1,39 @@
+{
+  "$schema": "./adapter.schema.json",
+  "schema_version": 1,
+  "selected_adapter": "deterministic-test",
+  "adapters": [
+    {
+      "id": "deterministic-test",
+      "factory": "voice_model.engines.adapters.testing:create_deterministic_test_adapter",
+      "approval": "test-only",
+      "model": {
+        "id": "fake-local",
+        "version": "1",
+        "artifact_revision": "embedded-fixture-v1"
+      },
+      "languages": ["th", "en", "auto"],
+      "controls": ["pitch", "pace"],
+      "supports_streaming": true,
+      "supports_timings": false,
+      "settings": {
+        "chunk_samples": 240
+      }
+    },
+    {
+      "id": "moss-local-v1-5",
+      "factory": "voice_model.engines.adapters.unavailable:create_approval_gated_adapter",
+      "approval": "pending",
+      "model": {
+        "id": "OpenMOSS-Team/MOSS-TTS-Local-Transformer-v1.5",
+        "version": "unapproved",
+        "artifact_revision": "PIN_BEFORE_DOWNLOAD"
+      },
+      "languages": ["th", "en", "auto"],
+      "controls": [],
+      "supports_streaming": false,
+      "supports_timings": false,
+      "settings": {}
+    }
+  ]
+}

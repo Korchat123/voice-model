@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/voice-model/engine-adapter.schema.json",
+  "title": "Engine adapter registry configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "selected_adapter", "adapters"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "selected_adapter": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+    },
+    "adapters": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/adapter"},
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "factory",
+        "approval",
+        "model",
+        "languages",
+        "controls",
+        "supports_streaming",
+        "supports_timings"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "factory": {
+          "type": "string",
+          "pattern": "^voice_model\\.engines\\.adapters\\.[a-z_][a-z0-9_.]*:[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "approval": {
+          "enum": ["test-only", "pending", "approved", "rejected"]
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "version", "artifact_revision"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1, "maxLength": 128},
+            "version": {"type": "string", "minLength": 1, "maxLength": 128},
+            "artifact_revision": {"type": "string", "minLength": 1, "maxLength": 128}
+          }
+        },
+        "languages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"enum": ["th", "en", "auto"]}
+        },
+        "controls": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "pitch",
+              "pace",
+              "energy",
+              "warmth",
+              "brightness",
+              "breathiness",
+              "resonance",
+              "expressiveness"
+            ]
+          }
+        },
+        "supports_streaming": {"type": "boolean"},
+        "supports_timings": {"type": "boolean"},
+        "settings": {
+          "type": "object",
+          "description": "Adapter-specific values; secrets and filesystem paths are forbidden.",
+          "propertyNames": {
+            "not": {"pattern": "(?i)(secret|token|password|path|file|dir|url)"}
+          },
+          "additionalProperties": {
+            "type": ["string", "number", "integer", "boolean", "null"]
+          }
+        }
+      }
+    }
+  }
+}
