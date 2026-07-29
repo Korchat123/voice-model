@@ -20,6 +20,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+  "psycopg[binary]>=3.2,<4",
   "starlette>=0.46,<1",
   "uvicorn>=0.34,<1",
 ]
@@ -59,6 +60,7 @@ show_error_codes = true
 addopts = "--strict-config --strict-markers"
 testpaths = ["tests"]
 markers = [
+  "database: checks requiring the Docker PostgreSQL service",
   "load: resource-intensive load checks",
   "model: checks requiring a local model artifact",
   "training_smoke: small reproducibility training check",

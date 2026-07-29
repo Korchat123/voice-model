@@ -15,6 +15,7 @@ class ServiceSettings:
     max_queued_requests: int = 2
     request_timeout_ms: int = 130_000
     tombstone_limit: int = 1_024
+    database_url: str | None = None
     request_limits: RequestLimits = field(default_factory=RequestLimits)
 
     def __post_init__(self) -> None:
@@ -34,6 +35,10 @@ class ServiceSettings:
             raise ValueError("max_queued_requests must be a non-negative integer")
         if self.port > 65_535:
             raise ValueError("port must be at most 65535")
+        if self.database_url is not None and not self.database_url.startswith(
+            ("postgresql://", "postgresql+psycopg://")
+        ):
+            raise ValueError("database_url must use PostgreSQL")
 
     @classmethod
     def from_environment(cls, environment: Mapping[str, str] | None = None) -> "ServiceSettings":
@@ -46,6 +51,7 @@ class ServiceSettings:
             max_concurrent_requests=_integer(source, "VOICE_MAX_CONCURRENT", 1),
             max_queued_requests=_integer(source, "VOICE_MAX_QUEUED", 2),
             request_timeout_ms=_integer(source, "VOICE_REQUEST_TIMEOUT_MS", 130_000),
+            database_url=source.get("VOICE_DATABASE_URL"),
         )
 
 

@@ -1,0 +1,46 @@
+name: voice-model
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: voice_model
+      POSTGRES_USER: voice_model
+      POSTGRES_PASSWORD: ${VOICE_POSTGRES_PASSWORD:-voice-model-local-only}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voice_model -d voice_model"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "127.0.0.1:${VOICE_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - voice-model-postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      VOICE_HOST: 0.0.0.0
+      VOICE_PORT: 8765
+      VOICE_DATABASE_URL: postgresql://voice_model:${VOICE_POSTGRES_PASSWORD:-voice-model-local-only}@postgres:5432/voice_model
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - /app/.venv/bin/python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/v1/health', timeout=2)"
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "127.0.0.1:${VOICE_MODEL_PORT:-8765}:8765"
+    restart: unless-stopped
+
+volumes:
+  voice-model-postgres:

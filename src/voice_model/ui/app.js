@@ -17,6 +17,7 @@ const audioStatus = document.querySelector("#audio-status");
 const audioPreview = document.querySelector("#audio-preview");
 const recorder = document.querySelector(".recorder");
 const exportButton = document.querySelector("#export-button");
+const saveButton = document.querySelector("#save-button");
 const exportStatus = document.querySelector("#export-status");
 
 let step = 1;
@@ -274,30 +275,7 @@ exportButton.addEventListener("click", async () => {
   exportButton.disabled = true;
   exportStatus.textContent = "Hashing local reference and preparing manifest…";
   try {
-    const manifest = {
-      schema_version: "1.0",
-      status: "draft-user-input",
-      created_at: new Date().toISOString(),
-      voice: {
-        id: document.querySelector("#voice-name").value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
-        display_name: document.querySelector("#voice-name").value.trim(),
-        source: form.elements.source.value,
-        language: document.querySelector("#language").value,
-        style: selectedPreset(),
-        controls: currentControls(),
-      },
-      authorization: {
-        user_attested_right_to_use: document.querySelector("#consent").checked,
-        signed_consent_record: "USER_INPUT_REQUIRED",
-        license_review: "USER_INPUT_REQUIRED",
-      },
-      reference: await referenceMetadata(),
-      safety: {
-        recordings_uploaded_by_ui: false,
-        training_approved: false,
-        release_approved: false,
-      },
-    };
+    const manifest = await buildManifest();
     const blob = new Blob([`${JSON.stringify(manifest, null, 2)}\n`], { type: "application/json" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -311,6 +289,56 @@ exportButton.addEventListener("click", async () => {
     exportButton.disabled = false;
   }
 });
+
+saveButton.addEventListener("click", async () => {
+  if (!validateFoundation()) {
+    showStep(1);
+    return;
+  }
+  saveButton.disabled = true;
+  exportStatus.textContent = "Saving metadata to the local database…";
+  try {
+    const response = await fetch("/v1/voice-profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(await buildManifest()),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body?.error?.message || `Database returned ${response.status}`);
+    exportStatus.textContent = `Saved “${body.display_name}” locally. Audio bytes were not stored.`;
+  } catch (error) {
+    exportStatus.textContent = `Save failed: ${error.message}`;
+  } finally {
+    saveButton.disabled = false;
+  }
+});
+
+async function buildManifest() {
+  return {
+    schema_version: "1.0",
+    status: "draft-user-input",
+    created_at: new Date().toISOString(),
+    voice: {
+      id: document.querySelector("#voice-name").value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+      display_name: document.querySelector("#voice-name").value.trim(),
+      source: form.elements.source.value,
+      language: document.querySelector("#language").value,
+      style: selectedPreset(),
+      controls: currentControls(),
+    },
+    authorization: {
+      user_attested_right_to_use: document.querySelector("#consent").checked,
+      signed_consent_record: "USER_INPUT_REQUIRED",
+      license_review: "USER_INPUT_REQUIRED",
+    },
+    reference: await referenceMetadata(),
+    safety: {
+      recordings_uploaded_by_ui: false,
+      training_approved: false,
+      release_approved: false,
+    },
+  };
+}
 
 form.addEventListener("submit", (event) => event.preventDefault());
 updateControlLabels();
